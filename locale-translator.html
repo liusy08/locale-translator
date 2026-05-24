@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本地化文件翻译工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4);
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);
+            color: white;
+        }
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(252, 74, 26, 0.4);
+        }
+        .btn-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+            color: white;
+        }
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        }
+        .file-input {
+            display: none;
+        }
+        .file-label {
+            padding: 10px 20px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.3s ease;
+            background: #f9f9f9;
+        }
+        .file-label:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: #f0f0ff;
+        }
+        .section-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        .tab {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        .tab:hover {
+            background: white;
+            color: #667eea;
+        }
+        .tab.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+        .content-area {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .section-content {
+            display: none;
+        }
+        .section-content.active {
+            display: block;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .section-title {
+            font-size: 18px;
+            color: #333;
+            font-weight: 600;
+        }
+        .stats {
+            font-size: 13px;
+            color: #999;
+        }
+        .translation-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .translation-table th,
+        .translation-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .translation-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #666;
+            font-size: 13px;
+        }
+        .translation-table tr:hover {
+            background: #f8f9fa;
+        }
+        .translation-table input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .translation-table input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .translation-table input.translated {
+            background: #e8f5e9;
+            border-color: #81c784;
+        }
+        .key-cell {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            color: #555;
+            max-width: 300px;
+            word-break: break-all;
+        }
+        .original-value {
+            max-width: 400px;
+            word-break: break-all;
+        }
+        .actions-cell {
+            width: 80px;
+            text-align: center;
+        }
+        .add-row-btn {
+            width: 100%;
+            padding: 8px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #666;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+        .add-row-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        .delete-row-btn {
+            padding: 4px 8px;
+            background: #ffebee;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #e53935;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        .delete-row-btn:hover {
+            background: #ef5350;
+            color: white;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #666;
+        }
+        .progress-bar {
+            height: 4px;
+            background: #f0f0f0;
+            border-radius: 2px;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+        .summary {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .summary-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #667eea;
+        }
+        .summary-label {
+            font-size: 13px;
+            color: #666;
+        }
+        .search-box {
+            padding: 10px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 300px;
+            transition: all 0.3s ease;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .filter-tab {
+            padding: 6px 14px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+        .filter-tab:hover {
+            background: #e0e0e0;
+        }
+        .filter-tab.active {
+            background: #667eea;
+            color: white;
+        }
+        .help-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .help-modal.active {
+            display: flex;
+        }
+        .help-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .help-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .help-content ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+        .help-content li {
+            margin-bottom: 10px;
+        }
+        .close-help {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+        }
+        .close-help:hover {
+            color: #333;
+        }
+        .quick-action-btn {
+            padding: 4px 8px;
+            margin: 0 2px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s;
+        }
+        .copy-btn {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .copy-btn:hover {
+            background: #1976d2;
+            color: white;
+        }
+        .translate-btn {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .translate-btn:hover {
+            background: #f57c00;
+            color: white;
+        }
+        .suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            min-width: 200px;
+            display: none;
+        }
+        .suggestions.active {
+            display: block;
+        }
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .suggestion-item:hover {
+            background: #f0f0ff;
+        }
+        .suggestion-section {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+        .suggestion-text {
+            color: #333;
+        }
+        .input-wrapper {
+            position: relative;
+        }
+        .mismatch-info {
+            background: #fff3cd;
+            padding: 12px;
+            border-left: 4px solid #ffc107;
+        }
+        .mismatch-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .mismatch-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .mismatch-item {
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        .mismatch-item:last-child {
+            margin-bottom: 0;
+        }
+        .mismatch-contained {
+            color: #856404;
+        }
+        .mismatch-label {
+            font-weight: 500;
+        }
+        .mismatch-original {
+            font-family: monospace;
+            background: #fff9e6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin: 0 4px;
+        }
+        .mismatch-arrow {
+            color: #667eea;
+            font-weight: bold;
+        }
+        .mismatch-translated {
+            font-family: monospace;
+            background: #e8f5e9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin: 0 4px;
+        }
+        .mismatch-source {
+            color: #999;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+        .api-config {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .api-label {
+            font-weight: 500;
+            color: #333;
+            font-size: 13px;
+        }
+        .api-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            min-width: 250px;
+            transition: all 0.3s;
+        }
+        .api-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .batch-translate-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .batch-translate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+        }
+        .batch-translate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .translate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .translate-btn:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+        .translate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .progress-indicator {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #1976d2;
+            display: none;
+        }
+        .progress-indicator.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 本地化文件翻译工具</h1>
+            <div class="controls">
+                <label class="file-label" for="mainFile">
+                    📁 导入本地化文件
+                </label>
+                <input type="file" id="mainFile" class="file-input" accept=".cfg">
+                
+                <label class="file-label" for="transFile">
+                    📝 导入已翻译文件
+                </label>
+                <input type="file" id="transFile" class="file-input" accept=".cfg">
+                
+                <button class="btn btn-success" onclick="exportTranslatedFile()">
+                    💾 导出翻译文件
+                </button>
+                
+                <button class="btn btn-danger" onclick="clearAll()">
+                    🗑️ 清空数据
+                </button>
+                
+                <input type="text" id="searchBox" class="search-box" placeholder="搜索键或值...">
+                
+                <button class="btn btn-info" onclick="showHelp()">
+                    💡 使用帮助
+                </button>
+            </div>
+            
+            <div class="api-config" id="apiConfig">
+                <label class="api-label">翻译服务:</label>
+                <span style="color: #666; font-size: 13px;">MyMemory 免费翻译 (无需API密钥)</span>
+            </div>
+        </div>
+        
+        <div class="content-area" id="contentArea">
+            <div class="empty-state">
+                <h3>📂 请先导入本地化文件</h3>
+                <p>点击上方"导入本地化文件"按钮，选择您的 .cfg 格式本地化文件</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="help-modal" id="helpModal">
+        <div class="help-content">
+            <span class="close-help" onclick="closeHelp()">&times;</span>
+            <h2>💡 翻译工具使用帮助</h2>
+            <ul>
+                <li><strong>翻译服务：</strong>使用 MyMemory 免费翻译API，无需API密钥，直接可用</li>
+                <li><strong>导入文件：</strong>点击「导入本地化文件」选择要翻译的 .cfg 文件</li>
+                <li><strong>导入已翻译文件：</strong>可选，导入已有的翻译文件继续编辑</li>
+                <li><strong>单条翻译：</strong>点击每个条目旁的「翻译」按钮，自动翻译并填入</li>
+                <li><strong>批量翻译：</strong>点击区块标题旁的「批量翻译」按钮，自动翻译该区块所有未翻译的条目</li>
+                <li><strong>手动编辑：</strong>直接在「翻译值」列输入或修改翻译内容</li>
+                <li><strong>筛选功能：</strong>可筛选查看「全部」「未翻译」「已翻译」的条目</li>
+                <li><strong>搜索功能：</strong>在搜索框输入关键词，快速定位相关条目</li>
+                <li><strong>快速翻译：</strong>当焦点在翻译输入框时，如果其他区块有相同键的翻译，会自动显示建议列表，点击即可快速填入</li>
+                <li><strong>不一致筛选：</strong>点击「不一致」标签，可以筛选出同一键在不同区块中原始值相同但翻译值不同的条目，方便统一翻译</li>
+                <li><strong>包含关系检测：</strong>点击「包含关系」标签，可以检测出一个值包含另一个值时，翻译值却不包含对应翻译的问题，方便对比修正</li>
+                <li><strong>导出文件：</strong>点击「导出翻译文件」保存翻译结果</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let localeData = {};
+        let currentFilter = 'all';
+        let currentSection = null;
+        
+        document.getElementById('mainFile').addEventListener('change', handleMainFileSelect);
+        document.getElementById('transFile').addEventListener('change', handleTransFileSelect);
+        document.getElementById('searchBox').addEventListener('input', handleSearch);
+        
+        function parseConfig(content) {
+            const sections = {};
+            let currentSection = null;
+            
+            const lines = content.split('\n');
+            for (let line of lines) {
+                line = line.trim();
+                
+                if (line.startsWith('[') && line.endsWith(']')) {
+                    currentSection = line.slice(1, -1);
+                    sections[currentSection] = {};
+                } else if (currentSection && line.includes('=')) {
+                    const [key, ...valueParts] = line.split('=');
+                    const value = valueParts.join('=').trim();
+                    sections[currentSection][key.trim()] = {
+                        original: value,
+                        translated: ''
+                    };
+                }
+            }
+            
+            return sections;
+        }
+        
+        function handleMainFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                localeData = parseConfig(e.target.result);
+                renderContent();
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+        
+        function handleTransFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file || Object.keys(localeData).length === 0) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const transData = parseConfig(e.target.result);
+                
+                for (const section in transData) {
+                    if (localeData[section]) {
+                        for (const key in transData[section]) {
+                            if (localeData[section][key]) {
+                                localeData[section][key].translated = transData[section][key].original;
+                            } else {
+                                localeData[section][key] = {
+                                    original: '',
+                                    translated: transData[section][key].original
+                                };
+                            }
+                        }
+                    }
+                }
+                
+                renderContent();
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+        
+        function handleSearch() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const tables = document.querySelectorAll('.translation-table');
+            
+            tables.forEach(table => {
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const keyCell = row.querySelector('.key-cell');
+                    const valueCell = row.querySelector('.original-value');
+                    const transCell = row.querySelector('.translated-input');
+                    
+                    const keyText = keyCell ? keyCell.textContent.toLowerCase() : '';
+                    const valueText = valueCell ? valueCell.textContent.toLowerCase() : '';
+                    const transText = transCell ? transCell.value.toLowerCase() : '';
+                    
+                    if (keyText.includes(searchTerm) || valueText.includes(searchTerm) || transText.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        function setFilter(filter) {
+            currentFilter = filter;
+            const filterTabs = document.querySelectorAll('.filter-tab');
+            filterTabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.filter === filter);
+            });
+            renderContent();
+        }
+        
+        function findInconsistentTranslations() {
+            const keyMap = {};
+            
+            for (const section in localeData) {
+                for (const key in localeData[section]) {
+                    const item = localeData[section][key];
+                    
+                    if (!keyMap[key]) {
+                        keyMap[key] = [];
+                    }
+                    
+                    keyMap[key].push({
+                        section: section,
+                        original: item.original,
+                        translated: item.translated.trim()
+                    });
+                }
+            }
+            
+            const inconsistentKeys = new Set();
+            
+            for (const key in keyMap) {
+                const entries = keyMap[key];
+                
+                for (let i = 0; i < entries.length; i++) {
+                    for (let j = i + 1; j < entries.length; j++) {
+                        const entry1 = entries[i];
+                        const entry2 = entries[j];
+                        
+                        if (entry1.original === entry2.original && 
+                            entry1.translated && entry2.translated && 
+                            entry1.translated !== entry2.translated) {
+                            inconsistentKeys.add(key);
+                            break;
+                        }
+                    }
+                    
+                    if (inconsistentKeys.has(key)) break;
+                }
+            }
+            
+            return inconsistentKeys;
+        }
+        
+        function findInclusionMismatches() {
+            const allEntries = [];
+            const mismatches = new Map();
+            
+            for (const section in localeData) {
+                for (const key in localeData[section]) {
+                    const item = localeData[section][key];
+                    if (item.original && item.translated) {
+                        allEntries.push({
+                            section,
+                            key,
+                            original: item.original,
+                            translated: item.translated.trim()
+                        });
+                    }
+                }
+            }
+            
+            for (let i = 0; i < allEntries.length; i++) {
+                const entry1 = allEntries[i];
+                if (!entry1.translated) continue;
+                
+                for (let j = 0; j < allEntries.length; j++) {
+                    if (i === j) continue;
+                    
+                    const entry2 = allEntries[j];
+                    if (!entry2.translated) continue;
+                    
+                    if (entry1.original.includes(entry2.original) && 
+                        entry1.original !== entry2.original &&
+                        !entry1.translated.includes(entry2.translated)) {
+                        
+                        const key = `${entry1.section}:${entry1.key}`;
+                        if (!mismatches.has(key)) {
+                            mismatches.set(key, {
+                                section: entry1.section,
+                                key: entry1.key,
+                                original: entry1.original,
+                                translated: entry1.translated,
+                                contains: []
+                            });
+                        }
+                        
+                        mismatches.get(key).contains.push({
+                            section: entry2.section,
+                            key: entry2.key,
+                            original: entry2.original,
+                            translated: entry2.translated
+                        });
+                    }
+                }
+            }
+            
+            return mismatches;
+        }
+        
+        function renderContent() {
+            const contentArea = document.getElementById('contentArea');
+            
+            if (Object.keys(localeData).length === 0) {
+                contentArea.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📂 请先导入本地化文件</h3>
+                        <p>点击上方"导入本地化文件"按钮，选择您的 .cfg 格式本地化文件</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const sections = Object.keys(localeData);
+            const totalKeys = sections.reduce((sum, section) => sum + Object.keys(localeData[section]).length, 0);
+            const translatedCount = sections.reduce((sum, section) => {
+                return sum + Object.values(localeData[section]).filter(item => item.translated.trim()).length;
+            }, 0);
+            const progress = totalKeys > 0 ? Math.round((translatedCount / totalKeys) * 100) : 0;
+            
+            let inconsistentKeys = new Set();
+            let inclusionMismatches = new Map();
+            if (currentFilter === 'inconsistent') {
+                inconsistentKeys = findInconsistentTranslations();
+            } else if (currentFilter === 'inclusion') {
+                inclusionMismatches = findInclusionMismatches();
+            }
+            
+            let tabsHtml = '<div class="section-tabs">';
+            sections.forEach(section => {
+                tabsHtml += `<button class="tab" onclick="showSection('${section}')">${section}</button>`;
+            });
+            tabsHtml += '</div>';
+            
+            let sectionsHtml = '';
+            sections.forEach((section, index) => {
+                const keys = Object.keys(localeData[section]);
+                let rowsHtml = '';
+                
+                keys.forEach(key => {
+                    const item = localeData[section][key];
+                    const isTranslated = item.translated.trim() !== '';
+                    let shouldShow = false;
+                    let mismatchInfo = null;
+                    
+                    if (currentFilter === 'all') {
+                        shouldShow = true;
+                    } else if (currentFilter === 'untranslated' && !isTranslated) {
+                        shouldShow = true;
+                    } else if (currentFilter === 'translated' && isTranslated) {
+                        shouldShow = true;
+                    } else if (currentFilter === 'inconsistent' && inconsistentKeys.has(key)) {
+                        shouldShow = true;
+                    } else if (currentFilter === 'inclusion') {
+                        const mismatchKey = `${section}:${key}`;
+                        if (inclusionMismatches.has(mismatchKey)) {
+                            shouldShow = true;
+                            mismatchInfo = inclusionMismatches.get(mismatchKey);
+                        }
+                    }
+                    
+                    if (shouldShow) {
+                        let mismatchHtml = '';
+                        if (mismatchInfo) {
+                            mismatchHtml = `
+                                <tr>
+                                    <td colspan="4" class="mismatch-info">
+                                        <div class="mismatch-title">⚠️ 包含关系不匹配，应包含以下翻译：</div>
+                                        <ul class="mismatch-list">
+                                            ${mismatchInfo.contains.map(contained => `
+                                                <li class="mismatch-item">
+                                                    <div class="mismatch-contained">
+                                                        <span class="mismatch-label">原文包含：</span>
+                                                        <span class="mismatch-original">${escapeHtml(contained.original)}</span>
+                                                        <span class="mismatch-arrow">→</span>
+                                                        <span class="mismatch-translated">${escapeHtml(contained.translated)}</span>
+                                                    </div>
+                                                    <div class="mismatch-source">
+                                                        (来自 ${escapeHtml(contained.section)}: ${escapeHtml(contained.key)})
+                                                    </div>
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                        
+                        rowsHtml += `
+                            <tr>
+                                <td class="key-cell">${escapeHtml(key)}</td>
+                                <td class="original-value">
+                                    ${escapeHtml(item.original)}
+                                    <button class="quick-action-btn translate-btn" onclick="translateSingle('${section}', '${key}', this)">翻译</button>
+                                </td>
+                                <td class="input-wrapper">
+                                    <input type="text" class="translated-input ${isTranslated ? 'translated' : ''}" 
+                                        value="${escapeHtml(item.translated)}" 
+                                        data-section="${section}"
+                                        data-key="${key}"
+                                        oninput="updateTranslation('${section}', '${key}', this.value)"
+                                        onfocus="showSuggestions('${section}', '${key}', this)"
+                                        onblur="hideSuggestionsDelayed(this)">
+                                    <div class="suggestions" id="suggestions-${section}-${key.replace(/[^a-zA-Z0-9]/g, '')}"></div>
+                                </td>
+                                <td class="actions-cell">
+                                    <button class="delete-row-btn" onclick="deleteRow('${section}', '${key}')">删除</button>
+                                </td>
+                            </tr>
+                            ${mismatchHtml}
+                        `;
+                    }
+                });
+                
+                rowsHtml += `
+                    <tr>
+                        <td colspan="4"><button class="add-row-btn" onclick="addRow('${section}')">+ 添加新键值</button></td>
+                    </tr>
+                `;
+                
+                sectionsHtml += `
+                    <div class="section-content ${index === 0 ? 'active' : ''}" id="section-${section}">
+                        <div class="section-header">
+                            <div>
+                                <h2 class="section-title">[${section}]</h2>
+                                <div class="stats">共 ${keys.length} 个键值对</div>
+                            </div>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <button class="batch-translate-btn" onclick="batchTranslateSection('${section}')">
+                                    🔄 批量翻译
+                                </button>
+                                <div class="filter-tabs">
+                                    <button class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" data-filter="all" onclick="setFilter('all')">全部</button>
+                                    <button class="filter-tab ${currentFilter === 'untranslated' ? 'active' : ''}" data-filter="untranslated" onclick="setFilter('untranslated')">未翻译</button>
+                                    <button class="filter-tab ${currentFilter === 'translated' ? 'active' : ''}" data-filter="translated" onclick="setFilter('translated')">已翻译</button>
+                                    <button class="filter-tab ${currentFilter === 'inconsistent' ? 'active' : ''}" data-filter="inconsistent" onclick="setFilter('inconsistent')">不一致</button>
+                                    <button class="filter-tab ${currentFilter === 'inclusion' ? 'active' : ''}" data-filter="inclusion" onclick="setFilter('inclusion')">包含关系</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="progress-indicator" id="progress-${section}"></div>
+                        <table class="translation-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%">键 (Key)</th>
+                                    <th style="width: 35%">原始值 (Original Value)</th>
+                                    <th style="width: 35%">翻译值 (Translated Value)</th>
+                                    <th style="width: 5%">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            });
+            
+            contentArea.innerHTML = `
+                <div class="summary">
+                    <div class="summary-item">
+                        <span class="summary-value">${sections.length}</span>
+                        <span class="summary-label">区块数</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-value">${totalKeys}</span>
+                        <span class="summary-label">键值对总数</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-value">${translatedCount}</span>
+                        <span class="summary-label">已翻译</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-value">${progress}%</span>
+                        <span class="summary-label">完成进度</span>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${progress}%"></div>
+                </div>
+                ${tabsHtml}
+                ${sectionsHtml}
+            `;
+            
+            const targetSection = currentSection || sections[0];
+            
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.section-content').forEach(content => content.classList.remove('active'));
+            
+            const targetTab = document.querySelector(`.tab[onclick="showSection('${targetSection}')"]`);
+            const targetContent = document.getElementById(`section-${targetSection}`);
+            
+            if (targetTab) targetTab.classList.add('active');
+            if (targetContent) targetContent.classList.add('active');
+        }
+        
+        function showSection(section) {
+            currentSection = section;
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.section-content').forEach(content => content.classList.remove('active'));
+            
+            const clickedTab = event.target.closest('.tab');
+            const clickedContent = document.getElementById(`section-${section}`);
+            
+            if (clickedTab) clickedTab.classList.add('active');
+            if (clickedContent) clickedContent.classList.add('active');
+        }
+        
+        function updateTranslation(section, key, value) {
+            if (localeData[section] && localeData[section][key]) {
+                localeData[section][key].translated = value;
+            }
+            const translatedInput = document.querySelector(`input[data-section="${section}"][data-key="${key}"]`);
+            if (translatedInput) {
+                if (value.trim()) {
+                    translatedInput.classList.add('translated');
+                } else {
+                    translatedInput.classList.remove('translated');
+                }
+                updateStats();
+            }
+        }
+        
+        function updateStats() {
+            const sections = Object.keys(localeData);
+            const totalKeys = sections.reduce((sum, section) => sum + Object.keys(localeData[section]).length, 0);
+            const translatedCount = sections.reduce((sum, section) => {
+                return sum + Object.values(localeData[section]).filter(item => item.translated.trim()).length;
+            }, 0);
+            const progress = totalKeys > 0 ? Math.round((translatedCount / totalKeys) * 100) : 0;
+            
+            const summaryEl = document.querySelector('.summary');
+            if (summaryEl) {
+                summaryEl.innerHTML = `
+                    <div class="summary-item">
+                        <span class="summary-value">${sections.length}</span>
+                        <span class="summary-label">区块数</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-value">${totalKeys}</span>
+                        <span class="summary-label">键值对总数</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-value">${translatedCount}</span>
+                        <span class="summary-label">已翻译</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-value">${progress}%</span>
+                        <span class="summary-label">完成进度</span>
+                    </div>
+                `;
+            }
+            
+            const progressFill = document.querySelector('.progress-fill');
+            if (progressFill) {
+                progressFill.style.width = `${progress}%`;
+            }
+        }
+        
+        function addRow(section) {
+            const newKey = prompt('请输入新键名:');
+            if (!newKey || !newKey.trim()) return;
+            
+            if (!localeData[section]) {
+                localeData[section] = {};
+            }
+            
+            if (localeData[section][newKey.trim()]) {
+                alert('该键名已存在！');
+                return;
+            }
+            
+            localeData[section][newKey.trim()] = {
+                original: '',
+                translated: ''
+            };
+            
+            renderContent();
+            setTimeout(() => {
+                document.getElementById(`section-${section}`).scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
+        
+        function deleteRow(section, key) {
+            if (!confirm(`确定要删除键 "${key}" 吗？`)) return;
+            
+            delete localeData[section][key];
+            
+            if (Object.keys(localeData[section]).length === 0) {
+                delete localeData[section];
+            }
+            
+            renderContent();
+        }
+        
+        function exportTranslatedFile() {
+            if (Object.keys(localeData).length === 0) {
+                alert('请先导入本地化文件！');
+                return;
+            }
+            
+            let content = '';
+            const sections = Object.keys(localeData).sort();
+            
+            sections.forEach(section => {
+                content += `[${section}]\n`;
+                
+                const keys = Object.keys(localeData[section]).sort();
+                keys.forEach(key => {
+                    const item = localeData[section][key];
+                    const value = item.translated.trim() || item.original;
+                    content += `${key}=${value}\n`;
+                });
+                
+                content += '\n';
+            });
+            
+            const blob = new Blob([content], { type: 'text/plain; charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'translated_locale.cfg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('翻译文件已导出！');
+        }
+        
+        function clearAll() {
+            if (!confirm('确定要清空所有数据吗？此操作不可恢复！')) return;
+            
+            localeData = {};
+            document.getElementById('mainFile').value = '';
+            document.getElementById('transFile').value = '';
+            document.getElementById('searchBox').value = '';
+            currentFilter = 'all';
+            renderContent();
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function showHelp() {
+            document.getElementById('helpModal').classList.add('active');
+        }
+        
+        function closeHelp() {
+            document.getElementById('helpModal').classList.remove('active');
+        }
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeHelp();
+            }
+        });
+        
+        document.getElementById('helpModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeHelp();
+            }
+        });
+        
+        function getSameKeyTranslations(key, currentSection) {
+            const suggestions = [];
+            
+            for (const section in localeData) {
+                if (section !== currentSection && localeData[section][key]) {
+                    const translated = localeData[section][key].translated;
+                    if (translated && translated.trim()) {
+                        suggestions.push({
+                            section: section,
+                            value: translated.trim()
+                        });
+                    }
+                }
+            }
+            
+            return suggestions;
+        }
+        
+        function showSuggestions(section, key, inputEl) {
+            const suggestions = getSameKeyTranslations(key, section);
+            
+            if (suggestions.length === 0) {
+                return;
+            }
+            
+            const sanitizedKey = key.replace(/[^a-zA-Z0-9]/g, '');
+            const suggestionsEl = document.getElementById(`suggestions-${section}-${sanitizedKey}`);
+            
+            if (!suggestionsEl) {
+                return;
+            }
+            
+            let html = '';
+            suggestions.forEach(item => {
+                html += `
+                    <div class="suggestion-item" onclick="applySuggestion(this, '${section}', '${key}')">
+                        <div class="suggestion-section">[${item.section}]</div>
+                        <div class="suggestion-text">${escapeHtml(item.value)}</div>
+                    </div>
+                `;
+            });
+            
+            suggestionsEl.innerHTML = html;
+            suggestionsEl.classList.add('active');
+        }
+        
+        function hideSuggestionsDelayed(inputEl) {
+            setTimeout(() => {
+                const wrapper = inputEl.closest('.input-wrapper');
+                if (wrapper) {
+                    const suggestionsEl = wrapper.querySelector('.suggestions');
+                    if (suggestionsEl) {
+                        suggestionsEl.classList.remove('active');
+                    }
+                }
+            }, 200);
+        }
+        
+        function applySuggestion(element, section, key) {
+            const text = element.querySelector('.suggestion-text').textContent;
+            const input = document.querySelector(`input[data-section="${section}"][data-key="${key}"]`);
+            
+            if (input) {
+                input.value = text;
+                updateTranslation(section, key, text);
+                
+                const wrapper = input.closest('.input-wrapper');
+                if (wrapper) {
+                    const suggestionsEl = wrapper.querySelector('.suggestions');
+                    if (suggestionsEl) {
+                        suggestionsEl.classList.remove('active');
+                    }
+                }
+                
+                input.focus();
+            }
+        }
+        
+        async function translateSingle(section, key, button) {
+            const item = localeData[section][key];
+            if (!item.original) {
+                return;
+            }
+            
+            button.disabled = true;
+            const originalText = button.textContent;
+            button.textContent = '翻译中...';
+            
+            try {
+                const translatedText = await callMyMemoryTranslate(item.original);
+                
+                if (translatedText) {
+                    item.translated = translatedText;
+                    const input = document.querySelector(`input[data-section="${section}"][data-key="${key}"]`);
+                    if (input) {
+                        input.value = translatedText;
+                        input.classList.add('translated');
+                    }
+                    updateStats();
+                }
+            } catch (error) {
+                console.error('翻译失败:', error);
+                alert('翻译失败: ' + (error.message || '未知错误'));
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
+        
+        async function batchTranslateSection(section) {
+            if (!localeData[section]) {
+                return;
+            }
+            
+            const keysToTranslate = [];
+            for (const key in localeData[section]) {
+                const item = localeData[section][key];
+                if (item.original && !item.translated.trim()) {
+                    keysToTranslate.push(key);
+                }
+            }
+            
+            if (keysToTranslate.length === 0) {
+                alert('该区块没有需要翻译的内容');
+                return;
+            }
+            
+            const progressEl = document.getElementById(`progress-${section}`);
+            progressEl.classList.add('active');
+            
+            for (let i = 0; i < keysToTranslate.length; i++) {
+                const key = keysToTranslate[i];
+                const item = localeData[section][key];
+                
+                progressEl.textContent = `正在翻译: ${i + 1} / ${keysToTranslate.length} - ${key}`;
+                
+                try {
+                    const translatedText = await callMyMemoryTranslate(item.original);
+                    
+                    if (translatedText) {
+                        item.translated = translatedText;
+                        const input = document.querySelector(`input[data-section="${section}"][data-key="${key}"]`);
+                        if (input) {
+                            input.value = translatedText;
+                            input.classList.add('translated');
+                        }
+                    }
+                    
+                    await delay(500);
+                } catch (error) {
+                    console.error(`翻译 ${key} 失败:`, error);
+                }
+            }
+            
+            progressEl.textContent = `翻译完成: ${keysToTranslate.length} 个条目`;
+            updateStats();
+            
+            setTimeout(() => {
+                progressEl.classList.remove('active');
+            }, 3000);
+        }
+        
+        async function callMyMemoryTranslate(text) {
+            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|zh-Hans`;
+            
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API 请求失败: ${response.status} - ${errorText}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.responseStatus === 200 && data.responseData) {
+                return data.responseData.translatedText;
+            } else {
+                throw new Error(data.responseDetails || '翻译失败');
+            }
+        }
+        
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
