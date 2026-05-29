@@ -16,23 +16,23 @@
             min-height: 100vh;
             padding: 20px;
         }
-        。container {
+        .container {
             max-width: 1400px;
             margin: 0 auto;
         }
-        。header {
+        .header {
             background: white;
             border-radius: 12px;
             padding: 24px;
             margin-bottom: 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
-        。header h1 {
+        .header h1 {
             color: #333;
             margin-bottom: 20px;
             font-size: 24px;
         }
-        。controls {
+        .controls {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
@@ -630,18 +630,23 @@
         
         function parseConfig(content) {
             const sections = {};
-            let currentSection = null;
+            let currentSection = '__general__';
+            sections[currentSection] = {};
             
             const lines = content.split('\n');
+            
             for (let line of lines) {
                 line = line.trim();
                 
                 if (line.startsWith('[') && line.endsWith(']')) {
                     currentSection = line.slice(1, -1);
                     sections[currentSection] = {};
-                } else if (currentSection && line.includes('=')) {
+                } else if (line.includes('=')) {
                     const [key, ...valueParts] = line.split('=');
                     const value = valueParts.join('=').trim();
+                    if (!sections[currentSection]) {
+                        sections[currentSection] = {};
+                    }
                     sections[currentSection][key.trim()] = {
                         original: value,
                         translated: ''
@@ -855,7 +860,8 @@
             
             let tabsHtml = '<div class="section-tabs">';
             sections.forEach(section => {
-                tabsHtml += `<button class="tab" onclick="showSection('${section}')">${section}</button>`;
+                const displaySection = section === '__general__' ? '[__未分类__]' : section;
+                tabsHtml += `<button class="tab" onclick="showSection('${section}')">${displaySection}</button>`;
             });
             tabsHtml += '</div>';
             
@@ -945,11 +951,13 @@
                     </tr>
                 `;
                 
+                const displaySection = section === '__general__' ? '__未分类__' : section;
+                
                 sectionsHtml += `
                     <div class="section-content ${index === 0 ? 'active' : ''}" id="section-${section}">
                         <div class="section-header">
                             <div>
-                                <h2 class="section-title">[${section}]</h2>
+                                <h2 class="section-title">[${displaySection}]</h2>
                                 <div class="stats">共 ${keys.length} 个键值对</div>
                             </div>
                             <div style="display: flex; gap: 12px; align-items: center;">
@@ -1130,7 +1138,9 @@
             const sections = Object.keys(localeData).sort();
             
             sections.forEach(section => {
-                content += `[${section}]\n`;
+                if (section !== '__general__') {
+                    content += `[${section}]\n`;
+                }
                 
                 const keys = Object.keys(localeData[section]).sort();
                 keys.forEach(key => {
